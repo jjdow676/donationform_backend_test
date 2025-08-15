@@ -218,7 +218,7 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, r
 });
 
 // ----------------------------------
-// CORS with preflight + logging
+// 2) CORS (with preflight) + JSON
 // ----------------------------------
 const allowedOrigins = [
   'https://gray-bay-02034850f.2.azurestaticapps.net',      // prod SWA
@@ -231,29 +231,27 @@ const allowedOrigins = [
   'http://localhost:5500'
 ];
 
-// Let cors library dynamically mirror request headers on preflight
-function corsOptionsDelegate(req, callback) {
-  const origin = req.header('Origin');
-  const isAllowed = !origin || allowedOrigins.includes(origin);
-  callback(null, {
-    origin: isAllowed,                    // true to reflect the Origin (or false to block)
-    methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
-    // IMPORTANT: do NOT hardcode allowedHeaders; let cors mirror Access-Control-Request-Headers
-    optionsSuccessStatus: 204
-  });
-}
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204
+};
 
-app.use(cors(corsOptionsDelegate));
-app.options('*', cors(corsOptionsDelegate));  // handle all preflights
+app.use(cors(corsOptions));
+// 👇 This line makes Express answer preflight for all routes
+app.options('*', cors(corsOptions));
 
-// (optional) quick logger so you can see OPTIONS hit the app
+// (optional) quick logger to debug requests & origin
 app.use((req, _res, next) => {
-  console.log(`${req.method} ${req.path}  ← Origin: ${req.headers.origin || 'n/a'}`);
+  console.log(`${req.method} ${req.path} ← Origin: ${req.headers.origin || 'n/a'}`);
   next();
 });
 
 app.use(express.json());
-
 
 // --- Health check ---
 app.get('/', (req, res) => {
@@ -318,7 +316,7 @@ app.post('/create-checkout-session', async (req, res) => {
 app.post('/create-payment-intent', async (req, res) => {
   try {
     const {
-      amountCents,               // final amount in cents (if provided)
+      amountCents,               // final amount in cents (optional if you pass base_amount_cents)
       currency = 'usd',
       donorEmail,
       donorName,
@@ -326,11 +324,22 @@ app.post('/create-payment-intent', async (req, res) => {
       metadata = {}
     } = req.body;
 
-    // Prefer recomputing from base on server (prevents client tampering)
+    // DEBUG: log the incoming payload
+    console.log('[create-payment-intent] body:', JSON.stringify(req.body));
+
     const base = Number(metadata.base_amount_cents || 0);
-    const totalCents = base > 0
+    const computedTotal = base > 0
       ? computeGrossCents(base, { coverFees })
       : Number(amountCents);
+
+    const totalCents = Number.isFinite(computedTotal) ? Math.round(computedTotal) : NaN;
+
+    // Validate amount
+    if (!Number.isInteger(totalCents) || totalCents < 50) {
+      const msg = `Invalid amount. totalCents=${computedTotal} (after round=${totalCents}). Must be integer >= 50.`;
+      console.warn('[create-payment-intent]', msg);
+      return res.status(400).json({ error: { message: msg } });
+    }
 
     const pi = await stripe.paymentIntents.create({
       amount: totalCents,
@@ -358,6 +367,7 @@ app.post('/create-payment-intent', async (req, res) => {
     res.status(400).json({ error: { message: err.message } });
   }
 });
+
 
 // -------------------------------------------------------
 // 5) New Inline Elements: SetupIntent (monthly start)
