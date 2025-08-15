@@ -218,25 +218,38 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, r
 });
 
 // ----------------------------------
-// 2) Normal middleware after webhook
+// 2) CORS (with preflight) + JSON
 // ----------------------------------
 const allowedOrigins = [
-  'https://gray-bay-02034850f.2.azurestaticapps.net', // prod SWA
-  'https://donate.bridgestowork.org',                 // prod custom domain (if used)
-  'https://gentle-water-04760d20f.1.azurestaticapps.net', // TEST SWA (your front-end)
+  'https://gray-bay-02034850f.2.azurestaticapps.net',      // prod SWA
+  'https://donate.bridgestowork.org',                      // prod custom
+  'https://gentle-water-04760d20f.1.azurestaticapps.net',  // TEST SWA
   'http://localhost:8080',
   'http://127.0.0.1:8080',
   'http://localhost:8081',
   'http://127.0.0.1:8081',
-  'http://localhost:5500' // <-- missing comma was here previously!
+  'http://localhost:5500'
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
-  }
-}));
+  },
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+// 👇 This line makes Express answer preflight for all routes
+app.options('*', cors(corsOptions));
+
+// (optional) quick logger to debug requests & origin
+app.use((req, _res, next) => {
+  console.log(`${req.method} ${req.path} ← Origin: ${req.headers.origin || 'n/a'}`);
+  next();
+});
 
 app.use(express.json());
 
@@ -244,6 +257,7 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.send('Stripe donation server is running!');
 });
+
 
 // -------------------------------------
 // 3) Legacy: Create Checkout session
