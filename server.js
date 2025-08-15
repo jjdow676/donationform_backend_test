@@ -218,7 +218,7 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, r
 });
 
 // ----------------------------------
-// 2) CORS (with preflight) + JSON
+// CORS with preflight + logging
 // ----------------------------------
 const allowedOrigins = [
   'https://gray-bay-02034850f.2.azurestaticapps.net',      // prod SWA
@@ -231,27 +231,29 @@ const allowedOrigins = [
   'http://localhost:5500'
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
-  },
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 204
-};
+// Let cors library dynamically mirror request headers on preflight
+function corsOptionsDelegate(req, callback) {
+  const origin = req.header('Origin');
+  const isAllowed = !origin || allowedOrigins.includes(origin);
+  callback(null, {
+    origin: isAllowed,                    // true to reflect the Origin (or false to block)
+    methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+    // IMPORTANT: do NOT hardcode allowedHeaders; let cors mirror Access-Control-Request-Headers
+    optionsSuccessStatus: 204
+  });
+}
 
-app.use(cors(corsOptions));
-// 👇 This line makes Express answer preflight for all routes
-app.options('*', cors(corsOptions));
+app.use(cors(corsOptionsDelegate));
+app.options('*', cors(corsOptionsDelegate));  // handle all preflights
 
-// (optional) quick logger to debug requests & origin
+// (optional) quick logger so you can see OPTIONS hit the app
 app.use((req, _res, next) => {
-  console.log(`${req.method} ${req.path} ← Origin: ${req.headers.origin || 'n/a'}`);
+  console.log(`${req.method} ${req.path}  ← Origin: ${req.headers.origin || 'n/a'}`);
   next();
 });
 
 app.use(express.json());
+
 
 // --- Health check ---
 app.get('/', (req, res) => {
