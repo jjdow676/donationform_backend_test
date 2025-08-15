@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  
+  <title>Donation Form</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+  // Make Stripe available everywhere on the page
+  const stripe = Stripe("pk_live_51LrPRaDe5Pv7iWC9rpLsqQu4RIWEk4NjP94L3aD9UfK4suIom6dHZAriPAyFWcTNf5Qcdr0vKIhesjNQiqjH3xQ700nGd6kXaE");
+</script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Favicon -->
+  <link rel="icon" href="https://bridgeshq.blob.core.windows.net/bridgeslogo/favicon.ico" type="image/x-icon" />
+   <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1TLJSNXLWC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1TLJSNXLWC');
+  </script>
+  
+  
+  <style>
+  
+     * {
+      box-sizing: border-box;
+    }
+
+    body {
+     font-family: 'Inter', sans-serif;
+      padding: 20px;
+    }
+
+    .donation-container {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .donation-logo {
+      display: block;
+      max-width: 450px;
+      width: 100%;
+      height: auto;
+      margin: 0 auto 20px auto;
+    }
+
+    .section-header {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .dedication-heading {
+      margin-top: 40px;
+    }
+
+    .tab-group {
+      display: flex;
+      justify-content: center;
+      margin: 16px 0;
+      gap: 10px;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background-color: #e0e0e0;
+      border: 1px solid #ccc;
+    }
+
+    .tab.active {
+      background-color: #00AAA6;
+      color: white;
+      font-weight: bold;
+    }
+
+    .amount-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .amount-btn {
+      height: 60px;
+      font-size: 18px;
+      font-weight: bold;
+      background: #00AAA6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .amount-btn.selected {
+      background: #007B78;
+    }
+
+    #custom-amount-box {
+      display: none;
+      margin-bottom: 10px;
+    }
+
+    .selected-amount {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .highlight-section {
+      background: #eefaf9;
+      border: 2px solid #00AAA6;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+
+    .name-fields {
+      display: flex;
+      gap: 12px;
+    }
+
+    .name-field {
+      flex: 1;
+    }
+
+    label {
+      display: block;
+      margin-top: 8px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+  .toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.toggle-switch .slider {
+  background-color: #ccc;
+  border-radius: 30px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.4s;
+}
+
+.toggle-switch .slider:before {
+  content: "";
+  position: absolute;
+  height: 24px;
+  width: 24px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.4s;
+}
+
+.toggle-switch input:checked + .slider {
+  background-color: #00AAA6;
+}
+
+.toggle-switch input:checked + .slider:before {
+  transform: translateX(30px);
+}
+
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #28A745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+		  .submit-container {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+}
+
+.donate-btn {
+  width: 100%;
+  max-width: 300px;
+  padding: 14px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  background-color: #28A745;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.25s ease;
+}
+
+.donate-btn:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+.donate-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+.testimonial-carousel {
+  margin-top: 50px;
+  background-color: #f1f8f6;
+  border-left: 5px solid #00AAA6;
+  padding: 20px;
+  border-radius: 8px;
+  min-height: 180px;
+  position: relative;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.testimonial {
+  text-align: left;
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.testimonial .quote {
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.testimonial .author {
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin-top: 10px;
+}
+
+.testimonial .org {
+  font-weight: normal;
+  font-style: italic;
+  color: #555;
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bottom-gradient-fade {
+  display: none;
+}
+
+
+    /* Responsive styles */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.2rem;
+    white-space: normal;
+  }
+
+  .amount-buttons {
+    grid-template-columns: 1fr;
+  }
+	.donation-logo {
+        max-width: 200px;
+      }
+
+      .tab {
+        font-size: 0.95rem;
+        padding: 12px;
+      }
+
+      .amount-btn {
+        height: 50px;
+        font-size: 16px;
+      }
+
+      .section-header {
+        font-size: 1rem;
+      }
+
+      input, button, label {
+        font-size: 16px;
+      }
+	  .toggle-row {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .amount-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tab-group {
+    flex-direction: column;
+  }
+
+  .name-fields {
+    flex-direction: column;
+  }
+
+  .section-header {
+    font-size: 1.1rem;
+  }
+
+  .bottom-gradient-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent);
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+    will-change: opacity;
+  }
+
+  .scroll-indicator {
+    font-size: 40px;
+    color: #00AAA6;
+    margin-bottom: 10px;
+    opacity: 0.9;
+    animation: bounce 1.4s ease-in-out 0s 6;
+  }
+}
+	  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+      opacity: 0.6;
+    }
+    50% {
+      transform: translateY(10px);
+      opacity: 1;
+    }
+  }
+/* Hide scroll indicator and fade on larger screens */
+@media (min-width: 769px) {
+  .bottom-gradient-fade,
+  .scroll-indicator {
+    display: none !important;
+  }
+}
+
+
+
+
+
+  </style>
+</head>
+<body>
+  <div class="donation-container">
+    <!-- ✅ 1. NEW TITLE + SUBTITLE -->
+<h1 style="
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 1.6rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: 1.4;
+">
+  Make a Donation to Support Bridges Today!
+</h1>
+
+
+    <p style="text-align: center; margin-bottom: 30px;">Your donation helps us connect individuals to sustainable employment opportunities.</p>
+
+    <img
+      src="https://bridgeshq.blob.core.windows.net/donationpageimage/thumbnail__JHP4705.jpg"
+      alt="Bridges to Work"
+      class="donation-logo"
+    />
+
+    <div class="section-header">Choose Your Donation Frequency</div>
+    <div class="tab-group">
+      <div class="tab active" data-frequency="one_time">One-Time 🎉</div>
+      <div class="tab" data-frequency="monthly">Monthly ❤️</div>
+    </div>
+
+<form id="donation-form">
+  <input type="hidden" name="frequency" value="one_time" />
+
+  <div class="amount-buttons">
+    <button type="button" class="amount-btn" data-amount="5000">$50</button>
+    <button type="button" class="amount-btn" data-amount="10000">$100</button>
+    <button type="button" class="amount-btn" data-amount="25000">$250</button>
+    <button type="button" class="amount-btn" data-amount="50000">$500</button>
+    <button type="button" class="amount-btn" data-amount="100000">$1000</button>
+    <button type="button" class="amount-btn" data-amount="other">Other</button>
+  </div>
+
+ 
+
+
+      <div id="custom-amount-box">
+        <input type="number" name="custom-amount" placeholder="Enter custom amount (USD)" min="1" />
+      </div>
+
+<div class="highlight-section" id="fee-cover-section" style="
+  margin: 20px auto;
+  padding: 12px 16px;
+  max-width: 450px;
+  font-size: 0.95rem;
+  text-align: center;
+">
+
+  <label style="display: flex; align-items: center; font-weight: 500; justify-content: center;">
+  <input type="checkbox" id="cover-fee-checkbox" checked style="margin-right: 10px;" />
+  Maximize your support of Bridges by covering our 2.9% credit card processing fee.
+</label>
+
+ <div id="fee-breakdown" style="margin-top: 10px; font-size: 0.95rem; text-align: center;">
+  <p style="margin-bottom: 4px;">
+    <span style="font-weight: 500;">Processing Fee:</span>
+    $<span id="fee-amount">0.00</span>
+  </p>
+  <p style="
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #007B78;
+    background: #e6f7f6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: inline-block;
+    margin: 8px auto 0;
+  ">
+  Total Donation: $<span id="total-with-fee">0.00</span>
+</p>
+</div> <!-- closes #fee-breakdown -->
+
+</div> <!-- closes #fee-cover-section -->
+
+<!-- ✅ Scroll hint shown after the processing fee section -->
+<div class="bottom-gradient-fade">
+  <div class="scroll-indicator">&#8595;</div>
+</div>
+
+
+      <div class="section-header">Your Information</div>
+      <div class="highlight-section">
+        <div class="name-fields">
+          <div class="name-field">
+            <label for="firstName">First Name:</label>
+            <input type="text" name="firstName" id="firstName" required />
+          </div>
+          <div class="name-field">
+            <label for="lastName">Last Name:</label>
+            <input type="text" name="lastName" id="lastName" required />
+          </div>
+        </div>
+
+        <label for="donorEmail">Email:</label>
+        <input type="email" name="donorEmail" id="donorEmail" required />
+
+        <label for="phone">Phone:</label>
+        <input type="tel" name="phone" id="phone" />
+
+        <label for="address1">Street Address:</label>
+        <input type="text" name="address1" id="address1" />
+
+        <label for="city">City:</label>
+        <input type="text" name="city" id="city" />
+
+        <label for="state">State/Province:</label>
+        <input type="text" name="state" id="state" />
+
+        <label for="zip">ZIP/Postal Code:</label>
+        <input type="text" name="zip" id="zip" />
+      </div>
+	  <!-- ✅ Newsletter toggle -->
+<div class="highlight-section" style="margin-bottom: 20px; border: 2px solid #00AAA6; background: #eefaf9;">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <span style="font-weight: 500;">Be part of our journey — get updates and success stories</span>
+    <label class="toggle-switch" aria-label="Subscribe to newsletter">
+      <input type="checkbox" id="newsletter-checkbox" />
+      <span class="slider"></span>
+    </label>
+  </div>
+</div>
+
+
+      <div class="section-header dedication-heading">Dedication</div>
+      <div class="highlight-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <label for="dedication-checkbox">I want my donation to be dedicated</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="dedication-checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div id="dedication-details" style="display: none;">
+          <label for="dedication-text">Dedicated to:</label>
+          <input type="text" id="dedication-text" name="dedicationText" placeholder="In honor of, In memory of..." />
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+            <label for="notify-checkbox">Send acknowledgement email?</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notify-checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div id="notify-email-box" style="display: none;">
+            <label for="notify-email">Recipient Email:</label>
+            <input type="email" id="notify-email" name="notifyEmail" placeholder="someone@example.com" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ 3. DYNAMIC BUTTON LABEL -->
+      <div class="submit-container">
+  <button type="submit" id="submit-button" class="donate-btn">Give Now</button>
+</div>
+
+    </form>
+	<div class="testimonial-carousel">
+  <div class="testimonial">
+    <p class="quote">“...”</p>
+    <p class="author">– Name, Title<br><span class="org">Organization</span></p>
+  </div>
+</div> 
+</div>
+
+
+
+<!-- Strip and Fee Logic -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    let selectedAmount = null;
+    const submitButton = document.getElementById("submit-button");
+
+    function updateSubmitButtonText() {
+      const freq = document.querySelector('[name="frequency"]').value;
+
+      if (selectedAmount) {
+        const finalAmount = calculateFeeAndTotal(selectedAmount);
+        const amt = (finalAmount / 100).toFixed(2);
+        submitButton.textContent = `Give $${amt} ${freq === "monthly" ? "Monthly" : "Now"}`;
+      } else {
+        submitButton.textContent = "Give Now";
+      }
+    }
+
+    function calculateFeeAndTotal(baseAmount) {
+      const coverFee = document.getElementById("cover-fee-checkbox").checked;
+      const feeEl = document.getElementById("fee-amount");
+      const totalEl = document.getElementById("total-with-fee");
+
+      if (!coverFee || !baseAmount) {
+        feeEl.textContent = "0.00";
+        totalEl.textContent = (baseAmount / 100).toFixed(2);
+        return baseAmount;
+      }
+
+      const totalWithFee = Math.ceil((baseAmount + 30) / 0.971);
+      const fee = totalWithFee - baseAmount;
+
+      feeEl.textContent = (fee / 100).toFixed(2);
+      totalEl.textContent = (totalWithFee / 100).toFixed(2);
+
+      return totalWithFee;
+    }
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelector('[name="frequency"]').value = tab.dataset.frequency;
+
+        updateSubmitButtonText();
+      });
+    });
+
+    document.querySelectorAll('.amount-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+
+        const val = btn.dataset.amount;
+
+        if (val === "other") {
+          selectedAmount = null;
+          document.getElementById("custom-amount-box").style.display = "block";
+        } else {
+          selectedAmount = parseInt(val);
+          document.getElementById("custom-amount-box").style.display = "none";
+          document.querySelector('[name="custom-amount"]').value = '';
+        }
+
+        calculateFeeAndTotal(selectedAmount);
+        updateSubmitButtonText();
+      });
+    });
+
+    document.querySelector('[name="custom-amount"]').addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+
+      if (val > 0) {
+        selectedAmount = val * 100;
+      } else {
+        selectedAmount = null;
+      }
+
+      calculateFeeAndTotal(selectedAmount);
+      updateSubmitButtonText();
+    });
+
+    document.getElementById("cover-fee-checkbox").addEventListener("change", () => {
+      calculateFeeAndTotal(selectedAmount);
+      updateSubmitButtonText();
+    });
+
+    document.getElementById("dedication-checkbox").addEventListener("change", () => {
+      const checked = document.getElementById("dedication-checkbox").checked;
+      document.getElementById("dedication-details").style.display = checked ? "block" : "none";
+      if (!checked) {
+        document.getElementById("notify-checkbox").checked = false;
+        document.getElementById("notify-email-box").style.display = "none";
+      }
+    });
+
+    document.getElementById("notify-checkbox").addEventListener("change", () => {
+      document.getElementById("notify-email-box").style.display = document.getElementById("notify-checkbox").checked ? "block" : "none";
+    });
+
+    document.getElementById("donation-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!selectedAmount) {
+        alert("Please select or enter a donation amount.");
+        return;
+      }
+
+      const finalAmount = calculateFeeAndTotal(selectedAmount);
+
+      const donorInfo = {
+        firstName: document.getElementById("firstName").value,
+        lastName: document.getElementById("lastName").value,
+        donorEmail: document.getElementById("donorEmail").value,
+        phone: document.getElementById("phone").value,
+        address1: document.getElementById("address1").value,
+        city: document.getElementById("city").value,
+        state: document.getElementById("state").value,
+        zip: document.getElementById("zip").value,
+        dedicationText: document.getElementById("dedication-text").value || '',
+        notifyEmail: document.getElementById("notify-email").value || '',
+        subscribeToNewsletter: document.getElementById("newsletter-checkbox").checked
+      };
+
+      const freq = document.querySelector('[name="frequency"]').value;
+      submitButton.disabled = true;
+      submitButton.textContent = freq === 'monthly' ? 'Processing Monthly Gift...' : 'Processing Donation...';
+
+      try {
+        const response = await fetch("https://bridges-donation-backend-b2cfejegfjgcc6f6.eastus2-01.azurewebsites.net/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: finalAmount,
+            frequency: freq,
+            donorInfo
+          })
+        });
+
+        const data = await response.json();
+
+     if (data.id) {
+  // Preferred: Stripe handles a top-level, user-initiated navigation
+  const { error } = await stripe.redirectToCheckout({ sessionId: data.id });
+  if (error) {
+    // Fallback (rare): if redirectToCheckout fails, try a top-level manual redirect
+    (window.top || window).location.assign(data.url || "about:blank");
+  }
+} else if (data.url) {
+  // Fallback: manually navigate the top window out of the iframe
+  (window.top || window).location.assign(data.url);
+} else {
+  alert("Something went wrong. Please try again.");
+  submitButton.disabled = false;
+  updateSubmitButtonText();
+}
+
+    });
+  });
+</script>
+
+<!-- Testimonals -->
+  <script>
+const testimonials = [
+  {
+    quote: "For more than a decade, Marriott Bridges has been a great partner... instrumental in helping us launch our Dallas team.",
+    author: "Mark Feinour, SVP, Support Services Executive",
+    org: "Bank of America"
+  },
+  {
+    quote: "Through this program we have been able to hire passionate, hard-working individuals that have become a crucial part of the Gaylord family.",
+    author: "Gracie Vega, Director of Human Resources",
+    org: "Gaylord Texan Resort & Convention Center"
+  },
+  {
+    quote: "We are ecstatic to be able to open our doors to such passionate, responsible and caring individuals... Bridges’ students have made a positive impact.",
+    author: "Helen Hooton, Assistant Director, Talent and Culture",
+    org: "The Claremont Club and Spa, a Fairmont Hotel"
+  },
+  {
+    quote: "Through their efforts, scores of students have been placed in competitive employment... many have advanced beyond entry level jobs into careers.",
+    author: "Dianne Kendrick Hawkins, Director, Special Education Services",
+    org: "Fort Worth Independent School District"
+  },
+  {
+    quote: "The counselors teach my students more than just how to get a job; they teach them how to retain and thrive in a job.",
+    author: "Phil Provost, Coordinator WorkAbility",
+    org: "Berkeley High School"
+  },
+  {
+    quote: "This community partnership allows our students to be engaged in real life experiences while earning REAL money.",
+    author: "Vanessa N. Brown, M.Ed., Transition Coordinator",
+    org: "Bayhill High School"
+  },
+  {
+    quote: "Without being involved with the Bridges program, I would not have been given the opportunity to publish a book and grow at Accenture.",
+    author: "Aisha Buford-Morrison",
+    org: "Bridges Alumni"
+  }
+];
+
+let currentIndex = 0;
+const quoteElem = document.querySelector(".testimonial .quote");
+const authorElem = document.querySelector(".testimonial .author");
+const orgElem = document.querySelector(".testimonial .org");
+
+function showTestimonial(index) {
+  quoteElem.textContent = `“${testimonials[index].quote}”`;
+  authorElem.innerHTML = `– ${testimonials[index].author}<br><span class="org">${testimonials[index].org}</span>`;
+}
+
+showTestimonial(currentIndex);
+
+setInterval(() => {
+  currentIndex = (currentIndex + 1) % testimonials.length;
+  showTestimonial(currentIndex);
+}, 5000);
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const scrollFade = document.querySelector('.bottom-gradient-fade');
+
+    if (window.innerWidth <= 768 && scrollFade) {
+      let lastScrollY = window.scrollY;
+
+      window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+
+        if (currentScrollY > lastScrollY && currentScrollY > 30) {
+          // Scrolling down
+          scrollFade.style.opacity = '0';
+        } else if (currentScrollY < lastScrollY && currentScrollY < 300) {
+          // Scrolling up near the top
+          scrollFade.style.opacity = '1';
+        }
+
+        lastScrollY = currentScrollY;
+      });
+    }
+  });
+</script>
+
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

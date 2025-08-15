@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Thank You for Your Gift</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eefaf9;
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 700px;
+      background: #ffffff;
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo img {
+      max-width: 300px;
+      width: 100%;
+      height: auto;
+    }
+
+    h1 {
+      color: #00AAA6;
+      margin-bottom: 24px;
+      font-size: 1.75rem;
+      text-align: center;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .signature {
+      font-weight: bold;
+      margin-top: 30px;
+    }
+
+    .cta {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .cta a {
+      display: inline-block;
+      background-color: #007B78;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    .cta a:hover {
+      background-color: #005e53;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="https://bridgeshq.blob.core.windows.net/logo/Bridges-Logo-MarriottTagline.png" alt="Bridges to Work Logo" />
+    </div>
+
+    <h1>Thank You for Your Generous Gift</h1>
+
+    <p id="greeting">Dear Friend,</p>
+
+    <p id="acknowledgement">
+      Thank you for your generous donation. Your support plays a vital role in helping us transform the lives of young adults with disabilities through the power of a job.
+    </p>
+
+    <p>
+      Your contribution directly supports our mission to connect youth to meaningful employment opportunities, empowering them to build brighter futures. We are deeply grateful for your partnership in this important work.
+    </p>
+
+    <p>
+      Stay connected to Bridges and <a href="https://www.bridgestowork.org/#signup" target="_blank">sign up for our newsletter</a> to learn more about the impact you're making.
+    </p>
+
+    <p class="signature">
+      On behalf of all of us at Bridges, thank you again for your generous gift.
+    </p>
+
+    <div class="cta">
+      <a href="/">Return to Donation Form</a>
+    </div>
+  </div>
+
+  <script>
+    // Get query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const name = urlParams.get('name') || 'Friend';
+    const amount = urlParams.get('amount');
+
+    // Format amount to $0.00
+    const formattedAmount = amount ? `$${(parseFloat(amount)).toFixed(2)}` : null;
+
+    // Inject into DOM
+    document.getElementById('greeting').textContent = `Dear ${name},`;
+
+    if (formattedAmount) {
+      document.getElementById('acknowledgement').textContent =
+        `Thank you for your generous donation of ${formattedAmount}. Your support plays a vital role in helping us transform the lives of young adults with disabilities through the power of a job.`;
+    }
+  </script>
+</body>
+</html>
+
