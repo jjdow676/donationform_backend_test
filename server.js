@@ -380,7 +380,7 @@ app.post('/create-setup-intent', async (req, res) => {
 
     const si = await stripe.setupIntents.create({
       customer: customer.id,
-      payment_method_types: ['card', 'link', 'us_bank_account'] // tailor as needed
+      payment_method_types: ['card'] // tailor as needed
     });
 
     res.json({ clientSecret: si.client_secret, customerId: customer.id });
