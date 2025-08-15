@@ -221,13 +221,14 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, r
 // 2) Normal middleware after webhook
 // ----------------------------------
 const allowedOrigins = [
-  'https://gray-bay-02034850f.2.azurestaticapps.net',
-  'https://donate.bridgestowork.org',
+  'https://gray-bay-02034850f.2.azurestaticapps.net', // prod SWA
+  'https://donate.bridgestowork.org',                 // prod custom domain (if used)
+  'https://gentle-water-04760d20f.1.azurestaticapps.net', // TEST SWA (your front-end)
   'http://localhost:8080',
   'http://127.0.0.1:8080',
   'http://localhost:8081',
   'http://127.0.0.1:8081',
-  'http://localhost:5500'
+  'http://localhost:5500' // <-- missing comma was here previously!
 ];
 
 app.use(cors({
