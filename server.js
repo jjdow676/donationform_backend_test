@@ -390,26 +390,51 @@ app.post('/create-setup-intent', async (req, res) => {
   }
 });
 
-// -------------------------------------------------------
 // 6) New Inline Elements: Create Subscription (monthly)
-// -------------------------------------------------------
 app.post('/create-subscription', async (req, res) => {
   try {
     const {
       customerId,
       paymentMethodId,
-      amountCents,                  // e.g., 2000 for $20
+      amountCents,                 // client-computed total (we'll validate/override)
       currency = 'usd',
       interval = 'month',
       metadata = {}
     } = req.body;
 
-    // Attach PM & set default
-    await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+    console.log('[create-subscription] body:', JSON.stringify({
+      customerId, paymentMethodId, amountCents, currency, interval, metadata
+    }));
+
+    if (!customerId || !paymentMethodId) {
+      return res.status(400).json({ error: { message: 'Missing customerId or paymentMethodId.' } });
+    }
+
+    // Recompute total from base + cover fees (prevents client tampering)
+    const base = Number(metadata.base_amount_cents || 0);
+    const coverFees = String(metadata.cover_fees) === 'true';
+    const computed = base > 0 ? computeGrossCents(base, { coverFees }) : Number(amountCents);
+    const totalCents = Number.isFinite(computed) ? Math.round(computed) : NaN;
+
+    if (!Number.isInteger(totalCents) || totalCents < 50) {
+      return res.status(400).json({ error: { message: `Invalid amount (cents): ${computed}` } });
+    }
+
+    // Ensure PM belongs to this customer (avoid attach errors)
+    const pm = await stripe.paymentMethods.retrieve(paymentMethodId);
+    if (pm.customer && pm.customer !== customerId) {
+      return res.status(400).json({ error: { message: 'Payment method belongs to a different customer. Refresh and try again.' } });
+    }
+    if (!pm.customer) {
+      await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+    }
+
+    // Make this PM the default for invoices
     await stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: paymentMethodId }
     });
 
+    // Create subscription (card-only; wallets still work since they tokenize to card)
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{
@@ -417,9 +442,10 @@ app.post('/create-subscription', async (req, res) => {
           currency,
           product_data: { name: 'Monthly Donation' },
           recurring: { interval },
-          unit_amount: Number(amountCents)
+          unit_amount: totalCents
         }
       }],
+      payment_settings: { payment_method_types: ['card'] }, // no Link/US bank
       metadata: {
         frequency: 'monthly',
         donor_name: `${metadata.first_name || ''} ${metadata.last_name || ''}`.trim(),
@@ -436,12 +462,13 @@ app.post('/create-subscription', async (req, res) => {
       expand: ['latest_invoice.payment_intent']
     });
 
-    res.json({ subscriptionId: subscription.id, status: subscription.status });
+    return res.json({ subscriptionId: subscription.id, status: subscription.status });
   } catch (err) {
     console.error('create-subscription error:', err);
-    res.status(400).json({ error: { message: err.message } });
+    return res.status(400).json({ error: { message: err.message } });
   }
 });
+
 
 // --- Start server ---
 app.listen(PORT, () => {
