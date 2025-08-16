@@ -396,7 +396,7 @@ app.post('/create-subscription', async (req, res) => {
     const {
       customerId,
       paymentMethodId,
-      amountCents,                 // client-computed total (we'll validate/override)
+      amountCents,                 // client total (we'll recompute/validate)
       currency = 'usd',
       interval = 'month',
       metadata = {}
@@ -420,7 +420,7 @@ app.post('/create-subscription', async (req, res) => {
       return res.status(400).json({ error: { message: `Invalid amount (cents): ${computed}` } });
     }
 
-    // Ensure PM belongs to this customer (avoid attach errors)
+    // Ensure PM is attached to this customer
     const pm = await stripe.paymentMethods.retrieve(paymentMethodId);
     if (pm.customer && pm.customer !== customerId) {
       return res.status(400).json({ error: { message: 'Payment method belongs to a different customer. Refresh and try again.' } });
@@ -429,22 +429,33 @@ app.post('/create-subscription', async (req, res) => {
       await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
     }
 
-    // Make this PM the default for invoices
+    // Make PM default for invoices
     await stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: paymentMethodId }
     });
 
-    // Create subscription (card-only; wallets still work since they tokenize to card)
+    // ✅ Create a Price first, then use it in the Subscription
+    // Prefer a static PRODUCT_ID if you have one; otherwise create price with product_data.
+    let price;
+    if (process.env.STRIPE_MONTHLY_PRODUCT_ID) {
+      price = await stripe.prices.create({
+        currency,
+        unit_amount: totalCents,
+        recurring: { interval },
+        product: process.env.STRIPE_MONTHLY_PRODUCT_ID
+      });
+    } else {
+      price = await stripe.prices.create({
+        currency,
+        unit_amount: totalCents,
+        recurring: { interval },
+        product_data: { name: 'Monthly Donation' }
+      });
+    }
+
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
-      items: [{
-        price_data: {
-          currency,
-          product_data: { name: 'Monthly Donation' },
-          recurring: { interval },
-          unit_amount: totalCents
-        }
-      }],
+      items: [{ price: price.id }],                // ← use the Price ID
       payment_settings: { payment_method_types: ['card'] }, // no Link/US bank
       metadata: {
         frequency: 'monthly',
@@ -468,6 +479,7 @@ app.post('/create-subscription', async (req, res) => {
     return res.status(400).json({ error: { message: err.message } });
   }
 });
+
 
 
 // --- Start server ---
